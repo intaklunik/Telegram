@@ -42,7 +42,8 @@ public class PhotoVideoSwitcherView extends View implements FlashViews.Invertabl
     public PhotoVideoSwitcherView(Context context) {
         super(context);
 
-        selectorPaint.setColor(0x32ffffff);
+//        selectorPaint.setColor(0x32ffffff);
+        selectorPaint.setColor(0x32000000);
         textPaint.setColor(0xffffffff);
 
         textPaint.setTypeface(AndroidUtilities.bold());
@@ -251,7 +252,8 @@ public class PhotoVideoSwitcherView extends View implements FlashViews.Invertabl
     }
 
     public void setInvert(float invert) {
-        selectorPaint.setColor(ColorUtils.blendARGB(0x32ffffff, 0x20000000, invert));
+      //  selectorPaint.setColor(ColorUtils.blendARGB(0x32ffffff, 0x20000000, invert));
+        selectorPaint.setColor(ColorUtils.blendARGB(0x32000000, 0x20000000, invert));
         textPaint.setColor(ColorUtils.blendARGB(0xffffffff, 0xff000000, invert));
     }
 }

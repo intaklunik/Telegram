@@ -284,7 +284,9 @@ import org.telegram.ui.Components.spoilers.SpoilersTextView;
 import org.telegram.ui.Stories.DarkThemeResourceProvider;
 import org.telegram.ui.Stories.recorder.CaptionContainerView;
 import org.telegram.ui.Stories.recorder.KeyboardNotifier;
+import org.telegram.ui.Stories.recorder.PreviewButtons;
 import org.telegram.ui.Stories.recorder.StoryEntry;
+import org.telegram.ui.Stories.recorder.StoryRecorder2;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -303,6 +305,11 @@ import java.util.Objects;
 @SuppressLint("WrongConstant")
 @SuppressWarnings("unchecked")
 public class PhotoViewer implements NotificationCenter.NotificationCenterDelegate, GestureDetector2.OnGestureListener, GestureDetector2.OnDoubleTapListener {
+    private StoryRecorder2 storyRecorder2;
+    public void setStoryRecorder2(StoryRecorder2 storyRecorder2) {
+        this.storyRecorder2 = storyRecorder2;
+    }
+
     private final static float ZOOM_SCALE = 0.1f;
     private final static int MARK_DEFERRED_IMAGE_LOADING = 1;
 
@@ -827,7 +834,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private ActionBarMenuItem sendItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem masksItem;
-    private LinearLayout itemsLayout;
+    private PreviewButtons previewButtons;
+   // private LinearLayout itemsLayout;
     private SpeedButtonsLayout chooseSpeedLayout;
     private ChooseDownloadQualityLayout chooseDownloadQualityLayout;
     private Map<View, Boolean> actionBarItemsVisibility = new HashMap<>(3);
@@ -5961,7 +5969,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                ((LayoutParams) itemsLayout.getLayoutParams()).rightMargin = pickerViewSendButton.getVisibility() == View.VISIBLE ? dp(70) : 0;
+               // ((LayoutParams) itemsLayout.getLayoutParams()).rightMargin = pickerViewSendButton.getVisibility() == View.VISIBLE ? dp(70) : 0;
+                 ((LayoutParams) previewButtons.getLayoutParams()).rightMargin = pickerViewSendButton.getVisibility() == View.VISIBLE ? dp(70) : 0;
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             }
 
@@ -6004,10 +6013,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             @Override
             protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
                 super.onLayout(changed, left, top, right, bottom);
-                if (itemsLayout.getVisibility() != GONE) {
+               // if (itemsLayout.getVisibility() != GONE) {
+                 if (previewButtons.getVisibility() != GONE) {
                     int rightMargin = pickerViewSendButton.getVisibility() == View.VISIBLE ? dp(70) : 0;
-                    int x = (right - left - rightMargin - itemsLayout.getMeasuredWidth()) / 2;
-                    itemsLayout.layout(x, itemsLayout.getTop(), x + itemsLayout.getMeasuredWidth(), itemsLayout.getTop() + itemsLayout.getMeasuredHeight());
+                    int x = (right - left - rightMargin - previewButtons.getMeasuredWidth()) / 2;
+                            //itemsLayout.getMeasuredWidth()) / 2;
+                  //  itemsLayout.layout(x, itemsLayout.getTop(), x + itemsLayout.getMeasuredWidth(), itemsLayout.getTop() + itemsLayout.getMeasuredHeight());
+                     previewButtons.layout(x, previewButtons.getTop(), x + previewButtons.getMeasuredWidth(), previewButtons.getTop() + previewButtons.getMeasuredHeight());
                 }
             }
         };
@@ -6768,6 +6780,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 showScheduleDatePickerDialog();
             } else {
                 sendPressed(true, 0);
+
             }
         });
         pickerViewSendButton.setOnLongClickListener(view -> {
@@ -6916,8 +6929,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return false;
         });
 
-        itemsLayout = new LinearLayout(parentActivity) {
-
+       //itemsLayout = new LinearLayout(parentActivity)
+        previewButtons = new PreviewButtons(parentActivity)
+        {
             boolean ignoreLayout;
 
             @Override
@@ -6961,14 +6975,49 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
         };
-        itemsLayout.setOrientation(LinearLayout.HORIZONTAL);
-        pickerView.addView(itemsLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 70, 0));
+        previewButtons.disableShareButton();
+        previewButtons.setOnClickListener((Integer btn) ->
+        {
+//            if (outputEntry == null || captionEdit.isRecording()) {
+//                return;
+//            }
+            captionEdit.clearFocus();
+            if (btn == PreviewButtons.BUTTON_SHARE) {
+                Log.d("TAG", "Button Share");
+               // processDone();
+            } else if (btn == PreviewButtons.BUTTON_PAINT) {
+                storyRecorder2.switchToEditMode(EDIT_MODE_PAINT, true);
+                if (storyRecorder2.paintView != null) {
+                    storyRecorder2.paintView.enteredThroughText = false;
+                    storyRecorder2.paintView.openPaint();
+                }
+            } else if (btn == PreviewButtons.BUTTON_TEXT) {
+                storyRecorder2.switchToEditMode(EDIT_MODE_PAINT, true);
+                if ( storyRecorder2.paintView != null) {
+                    storyRecorder2.paintView.openText();
+                    storyRecorder2.paintView.enteredThroughText = true;
+                }
+            } else if (btn == PreviewButtons.BUTTON_STICKER) {
+                storyRecorder2.createPhotoPaintView();
+                storyRecorder2.hidePhotoPaintView();
+                if ( storyRecorder2.paintView != null) {
+                    storyRecorder2.paintView.openStickers();
+                }
+            } else if (btn == PreviewButtons.BUTTON_ADJUST) {
+                storyRecorder2.switchToEditMode(EDIT_MODE_FILTER, true);
+
+            }
+        });
+
+        // itemsLayout.setOrientation(LinearLayout.HORIZONTAL);
+        pickerView.addView(previewButtons, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 70, 0));
+      //  pickerView.addView(itemsLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 70, 0));
 
         cropItem = new ImageView(parentActivity);
         cropItem.setScaleType(ImageView.ScaleType.CENTER);
         cropItem.setImageResource(R.drawable.media_crop);
         cropItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
-        itemsLayout.addView(cropItem, LayoutHelper.createLinear(48, 48));
+       // itemsLayout.addView(cropItem, LayoutHelper.createLinear(48, 48));
         cropItem.setOnClickListener(v -> {
             cancelStickerClippingMode();
             if (isCaptionOpen()) {
@@ -6995,7 +7044,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         rotateItem.setScaleType(ImageView.ScaleType.CENTER);
         rotateItem.setImageResource(R.drawable.msg_photo_rotate);
         rotateItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
-        itemsLayout.addView(rotateItem, LayoutHelper.createLinear(48, 48));
+      //  itemsLayout.addView(rotateItem, LayoutHelper.createLinear(48, 48));
         rotateItem.setOnClickListener(v -> cropRotate(-90));
         rotateItem.setContentDescription(getString("AccDescrRotate", R.string.AccDescrRotate));
 
@@ -7003,7 +7052,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         mirrorItem.setScaleType(ImageView.ScaleType.CENTER);
         mirrorItem.setImageResource(R.drawable.media_flip);
         mirrorItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
-        itemsLayout.addView(mirrorItem, LayoutHelper.createLinear(48, 48));
+      //  itemsLayout.addView(mirrorItem, LayoutHelper.createLinear(48, 48));
         mirrorItem.setOnClickListener(v -> cropMirror());
         mirrorItem.setContentDescription(getString("AccDescrMirror", R.string.AccDescrMirror));
 
@@ -7011,7 +7060,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         paintItem.setScaleType(ImageView.ScaleType.CENTER);
         paintItem.setImageResource(R.drawable.media_draw);
         paintItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
-        itemsLayout.addView(paintItem, LayoutHelper.createLinear(48, 48));
+      //  itemsLayout.addView(paintItem, LayoutHelper.createLinear(48, 48));
         paintItem.setOnClickListener(v -> {
             cancelStickerClippingMode();
             if (isCaptionOpen()) {
@@ -7062,7 +7111,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         selectedCompression = selectCompression();
         compressItem.setState(videoConvertSupported && compressionsCount > 1, muteVideo, Math.min(resultWidth, resultHeight));
         compressItem.setContentDescription(getString("AccDescrVideoQuality", R.string.AccDescrVideoQuality));
-        itemsLayout.addView(compressItem, LayoutHelper.createLinear(48, 48));
+       // itemsLayout.addView(compressItem, LayoutHelper.createLinear(48, 48));
         compressItem.setOnClickListener(v -> {
             if (isCaptionOpen() || muteVideo) {
                 return;
@@ -7085,7 +7134,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         tuneItem.setScaleType(ImageView.ScaleType.CENTER);
         tuneItem.setImageResource(R.drawable.media_settings);
         tuneItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
-        itemsLayout.addView(tuneItem, LayoutHelper.createLinear(48, 48));
+      //  itemsLayout.addView(tuneItem, LayoutHelper.createLinear(48, 48));
         tuneItem.setOnClickListener(v -> {
             if (v.getAlpha() < .9f) return;
             cancelStickerClippingMode();
@@ -11487,6 +11536,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         @Override
                         public void onAnimationStart(Animator animation) {
                             pickerView.setVisibility(View.VISIBLE);
+                            previewButtons.setVisibility(View.VISIBLE);
+                            previewButtons.appear(true, false);
                             if (useFullWidthSendButton()) {
                                 doneButtonFullWidth.setVisibility(View.VISIBLE);
                             } else {
@@ -13424,6 +13475,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 //            }
             if (sendPhotoType != SELECT_TYPE_NO_SELECT) {
                 pickerView.setVisibility(View.VISIBLE);
+                previewButtons.setVisibility(View.VISIBLE);
+                previewButtons.appear(true, false);
                 if (useFullWidthSendButton()) {
                     doneButtonFullWidth.setVisibility(View.VISIBLE);
                 } else {
@@ -13572,7 +13625,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             transitionSet.setOrdering(TransitionSet.ORDERING_TOGETHER);
             transitionSet.setDuration(220);
             transitionSet.setInterpolator(CubicBezierInterpolator.DEFAULT);
-            TransitionManager.beginDelayedTransition(itemsLayout, transitionSet);
+          //  TransitionManager.beginDelayedTransition(itemsLayout, transitionSet);
+              TransitionManager.beginDelayedTransition(previewButtons, transitionSet);
         }
 
         CharSequence title = null;
@@ -19872,7 +19926,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             return;
         }
         compressItem.setState(videoConvertSupported && compressionsCount > 1, muteVideo, Math.min(resultWidth, resultHeight));
-        itemsLayout.requestLayout();
+      //  itemsLayout.requestLayout();
+          previewButtons.requestLayout();
 
         estimatedDuration = (long) Math.ceil((videoTimelineView.getRightProgress() - videoTimelineView.getLeftProgress()) * videoDuration);
         videoCutStart = videoTimelineView.getLeftProgress();

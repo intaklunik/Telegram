@@ -93,6 +93,11 @@ public class PreviewButtons extends FrameLayout {
         return false;
     }
 
+    public void disableShareButton() {
+        removeView(shareButton);
+    }
+
+
     public void setShareText(String text, boolean arrow) {
         if (TextUtils.equals(text, shareText) && arrow == shareArrow) {
             return;

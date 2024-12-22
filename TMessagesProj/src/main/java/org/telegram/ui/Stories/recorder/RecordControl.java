@@ -466,19 +466,19 @@ public class RecordControl extends View implements FlashViews.Invertable {
             if (duration / 1000L != lastDuration / 1000L) {
                 delegate.onVideoDuration(duration / 1000L);
             }
-            if (duration >= MAX_DURATION) {
-                post(() -> {
-                    recording = false;
-                    longpressRecording = false;
-                    this.recordingLoadingStart = SystemClock.elapsedRealtime();
-                    this.recordingLoading = true;
-                    touch = false;
-                    recordButton.setPressed(false);
-                    flipButton.setPressed(false);
-                    lockButton.setPressed(false);
-                    delegate.onVideoRecordEnd(true);
-                });
-            }
+//            if (duration >= MAX_DURATION) {
+//                post(() -> {
+//                    recording = false;
+//                    longpressRecording = false;
+//                    this.recordingLoadingStart = SystemClock.elapsedRealtime();
+//                    this.recordingLoading = true;
+//                    touch = false;
+//                    recordButton.setPressed(false);
+//                    flipButton.setPressed(false);
+//                    lockButton.setPressed(false);
+//                    delegate.onVideoRecordEnd(true);
+//                });
+//            }
             lastDuration = duration;
         }
 
